@@ -6,19 +6,19 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "test": "node scripts/buildCV.js debug",
+    "preview": "vite preview",
+    "lint": "eslint .",
 
-    "build:cv:debug" : "node scripts/buildCV.js debug",
-    "build:cv:release" : "node scripts/buildCV.js release",
+    "build:cv:debug": "node scripts/buildCV.js debug",
+    "build:cv:release": "node scripts/buildCV.js release",
 
     "electron:build": "npm run build && tsc --project tsconfig.electron.json",
     "electron:start": "npm run electron:build && npm run build:cv:debug && electron dist/electron/main.js",
-    "electron:dev": "start npm run dev && npm run build:cv:debug && npm run electron:run",
-    "electron:run": "wait-on http://localhost:5173 && tsc --project tsconfig.electron.json && npm run build:cv:debug && cross-env NODE_ENV=development electron dist/electron/main.js",
-    "electron:package": "npm run electron:build && npm run build:cv:release && electron-builder",
+    "electron:dev": "concurrently \"npm run dev\" \"npm run electron:dev:backend\"",
+    "electron:dev:backend": "npm run build:cv:debug && tsc --project tsconfig.electron.json && wait-on http://localhost:5173 && cross-env NODE_ENV=development electron dist/electron/main.js",
+    "electron:dist": "npm run electron:build && npm run build:cv:release && electron-builder",
 
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "clean": "rimraf dist build"
   },
   "dependencies": {
     "react": "^19.1.1",
@@ -50,6 +50,7 @@
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
     "babel-plugin-react-compiler": "^19.1.0-rc.3",
+    "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^38.4.0",
     "electron-builder": "^26.0.12",
