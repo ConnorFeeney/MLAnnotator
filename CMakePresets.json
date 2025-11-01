@@ -14,7 +14,7 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/dist/cvClient/bin",
                 "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/dist/cvClient/bin",
-                "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/dist/cvClient/lib"
+                "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/build/lib"
             },
             "condition": {
                 "type": "equals",
@@ -35,7 +35,7 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/dist/cvClient/bin",
                 "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/dist/cvClient/bin",
-                "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/dist/cvClient/lib"
+                "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "${sourceDir}/build/lib"
             },
             "condition": {
                 "type": "equals",
