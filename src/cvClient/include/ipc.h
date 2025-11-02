@@ -5,13 +5,16 @@
 
 #include <unordered_map>
 #include <vector>
+#include <queue>
 #include <functional>
 #include <string>
 
 #include <cstdlib>
+#include <cstddef>
 
 #include <thread>
 #include <mutex>
+#include <memory>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -31,18 +34,29 @@ namespace ipc {
         int write(const char* data, size_t size);
 
     private:
-        std::thread* connectThread;
-        std::thread* readThread;
-        std::thread* writeThread;
+        std::unique_ptr<std::thread> connectThread;
+        std::unique_ptr<std::thread> readThread;
+        std::unique_ptr<std::thread> writeThread;
 
-        void emit(std::string& event, const char* buffer, size_t size);
+        std::mutex eventMutex;
+        std::unordered_map<std::string, std::vector<std::function<void(const char*, size_t)>>> eventHandlers;
 
         std::mutex pipeMutex;
-        std::unordered_map<std::string, std::vector<std::function<void(const char*, size_t)>>> eventHandlers;
+
+        std::mutex writeQueueMutex;
+        std::queue<const char*> writeQueue;
+        std::mutex readQueueMutex;
+        std::queue<const char*> readQueue;
+
 #ifdef _WIN32
         HANDLE hPipe = INVALID_HANDLE_VALUE;
         LPTSTR lpszPipename = nullptr;
 #endif
+
+        void connectFunc();
+        void readFunc();
+        void writeFunc();
+        void emit(std::string& event, const char* buffer, size_t size);
     };
-    #endif
 }
+#endif

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <set>
 
+#include <cstring>
+
 const std::set<std::string> EVENTS = {
     "connect",
     "data",
@@ -39,6 +41,10 @@ namespace ipc {
         }
 
         std::cout << "Pipe Created" << std::endl;
+
+        this->connectThread = std::make_unique<std::thread>([this]() {
+            this->connectFunc();
+        });
 #endif
     }
     
@@ -47,13 +53,23 @@ namespace ipc {
         delete[] lpszPipename;
         lpszPipename = nullptr;
 
+        if (this->connectThread && this->connectThread->joinable()) {
+            this->connectThread->join();
+            this->connectThread.reset();
+        }
+
         DisconnectNamedPipe(this->hPipe); 
         CloseHandle(this->hPipe); 
         std::cout << "Pipe Closed" << std::endl;
 #endif
     }
 
+    void Pipe::connectFunc() {
+        std::cout << "Awaiting Connection" << std::endl;
+    }
+
     int Pipe::on(std::string event, std::function<void(const char*, size_t)> handler) {
+        std::lock_guard<std::mutex> lock(this->eventMutex);
         bool eventAllowed = false;
         for (const std::string& eventName : EVENTS) {
             if (event == eventName) {
@@ -73,6 +89,7 @@ namespace ipc {
     }
 
     int Pipe::removeListener(std::string event, int id) {
+        std::lock_guard<std::mutex> lock(this->eventMutex);
         bool eventAllowed = false;
         for (const std::string& eventName : EVENTS) {
             if (event == eventName) {
@@ -96,6 +113,7 @@ namespace ipc {
     }
 
     int Pipe::removeAllListeners(std::string event) {
+        std::lock_guard<std::mutex> lock(this->eventMutex);
         bool eventAllowed = false;
         for (const std::string& eventName : EVENTS) {
             if (event == eventName) {
@@ -113,11 +131,11 @@ namespace ipc {
         return 0;
     }
 
-    int read(const char* buffer, size_t size) {
+    int Pipe::read(const char* buffer, size_t size) {
         return 0;
     }
 
-    int write(const char* data, size_t size) {
+    int Pipe::write(const char* data, size_t size) {
         return 0;
     }
 }
