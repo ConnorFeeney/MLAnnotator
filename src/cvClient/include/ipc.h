@@ -33,6 +33,9 @@ namespace ipc {
         int read(const char* buffer, size_t size);
         int write(const char* data, size_t size);
 
+        int read(std::vector<char>);
+        int write(std::vector<char>);
+
     private:
         std::unique_ptr<std::thread> connectThread;
         std::unique_ptr<std::thread> readThread;
@@ -42,21 +45,24 @@ namespace ipc {
         std::unordered_map<std::string, std::vector<std::function<void(const char*, size_t)>>> eventHandlers;
 
         std::mutex pipeMutex;
+        std::atomic<bool> pipeRunning = false;
+        std::atomic<bool> clientConnected = false;
 
         std::mutex writeQueueMutex;
-        std::queue<const char*> writeQueue;
+        std::queue<std::vector<char>> writeQueue;
         std::mutex readQueueMutex;
-        std::queue<const char*> readQueue;
+        std::queue<std::vector<char>> readQueue;
 
-#ifdef _WIN32
+        #ifdef _WIN32
+        HANDLE stopEvent = INVALID_HANDLE_VALUE;
         HANDLE hPipe = INVALID_HANDLE_VALUE;
         LPTSTR lpszPipename = nullptr;
-#endif
+        #endif
 
         void connectFunc();
         void readFunc();
         void writeFunc();
-        void emit(std::string& event, const char* buffer, size_t size);
+        void emit(std::string event);
     };
 }
 #endif
