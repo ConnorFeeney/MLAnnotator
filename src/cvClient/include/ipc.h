@@ -30,11 +30,13 @@ namespace ipc {
         int removeListener(std::string event, int id);
         int removeAllListeners(std::string event);
 
-        int read(const char* buffer, size_t size);
+        int read(char* buffer, size_t size);
         int write(const char* data, size_t size);
 
         int read(std::vector<char>);
         int write(std::vector<char>);
+
+        void waitForConnection();
 
     private:
         std::unique_ptr<std::thread> connectThread;

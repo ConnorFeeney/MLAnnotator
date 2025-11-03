@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <set>
+#include <chrono>
 
 #include <cstring>
 
@@ -236,8 +237,6 @@ namespace ipc {
                 
                 messageBuf = std::vector<char>();
                 readingHeader = true;
-
-                this->emit("read");
             }
         }
 
@@ -261,6 +260,7 @@ namespace ipc {
             {
                 std::lock_guard<std::mutex> lock(writeQueueMutex);
                 if(writeQueue.empty()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     continue;
                 }
 
@@ -357,11 +357,55 @@ namespace ipc {
         return 0;
     }
 
-    int Pipe::read(const char* buffer, size_t size) {
-        return 0;
+    int Pipe::read(char* buffer, size_t size) {
+        if (!buffer || size == 0) {
+            return -1;
+        }
+
+        bool messageAvailable = false;
+        while (!messageAvailable && this->pipeRunning) {
+            {
+                std::lock_guard<std::mutex> lock(readQueueMutex);
+                messageAvailable = !readQueue.empty();
+            }
+            if (!messageAvailable) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        
+        if (!this->pipeRunning) {
+            return -1;
+        }
+
+        std::vector<char> message;
+        {
+            std::lock_guard<std::mutex> lock(readQueueMutex);
+            message = std::move(readQueue.front());
+            readQueue.pop();
+        }
+
+        std::memcpy(buffer, message.data(), size);
+        
+        return message.size();
     }
 
     int Pipe::write(const char* data, size_t size) {
-        return 0;
+        if (data == nullptr || size <= 0) {
+            return -1;
+        }
+
+        std::vector<char> message(size);
+        std::memcpy(message.data(), data, size);
+
+        std::lock_guard<std::mutex> lock(writeQueueMutex);
+        this->writeQueue.push(message);
+
+        return size;
+    }
+
+    void Pipe::waitForConnection() {
+        while (this->pipeRunning && !this->clientConnected) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
     }
 }
